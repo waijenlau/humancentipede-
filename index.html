@@ -10,57 +10,33 @@
             background-color: black;
             color: white;
             font-family: Arial, sans-serif;
+            touch-action: manipulation; /* Prevents zooming on mobile taps */
         }
         canvas {
             border: 2px solid white;
             touch-action: none;
         }
-        .controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        #restartBtn {
+            display: none;
+            padding: 10px 20px;
+            font-size: 18px;
             margin-top: 10px;
-        }
-        .row {
-            display: flex;
-        }
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            margin: 5px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 60px;
-            background-color: gray;
-            color: white;
-            border: none;
-            border-radius: 10px;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
     <h1>Centipede Snake Game</h1>
-    <p>Press Arrow Keys or Tap Controls to Play</p>
+    <p>Tap anywhere on the screen to move the snake</p>
     <canvas id="gameCanvas" width="600" height="600"></canvas>
-
-    <!-- Mobile Controls -->
-    <div class="controls">
-        <button class="control-btn" id="up">▲</button>
-        <div class="row">
-            <button class="control-btn" id="left">◀</button>
-            <button class="control-btn" id="down">▼</button>
-            <button class="control-btn" id="right">▶</button>
-        </div>
-    </div>
+    <button id="restartBtn">Restart Game</button>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
         const gridSize = 20;
-        let snake = [{ x: 200, y: 200 }];
+        let snake = [{ x: 300, y: 300 }];
         let food = { x: 100, y: 100 };
         let direction = { x: 0, y: 0 };
         let nextDirection = { x: 0, y: 0 };
@@ -143,45 +119,47 @@
             draw();
         }
 
-        document.addEventListener("keydown", (event) => {
-            if (!gameStarted) gameStarted = true;
-
-            if (event.key === "ArrowUp" && direction.y === 0) nextDirection = { x: 0, y: -gridSize };
-            if (event.key === "ArrowDown" && direction.y === 0) nextDirection = { x: 0, y: gridSize };
-            if (event.key === "ArrowLeft" && direction.x === 0) nextDirection = { x: -gridSize, y: 0 };
-            if (event.key === "ArrowRight" && direction.x === 0) nextDirection = { x: gridSize, y: 0 };
-        });
-
         function endGame() {
             gameOver = true;
-            alert("Game Over! Refresh to play again.");
+            document.getElementById("restartBtn").style.display = "block"; // Show restart button
         }
 
         function restartGame() {
             gameOver = false;
             gameStarted = false;
-            snake = [{ x: 200, y: 200 }];
+            snake = [{ x: 300, y: 300 }];
             direction = { x: 0, y: 0 };
             nextDirection = { x: 0, y: 0 };
             food = { x: 100, y: 100 };
             bird = { x: -gridSize, y: -gridSize };
+            document.getElementById("restartBtn").style.display = "none"; // Hide restart button
         }
 
-        // Mobile touch controls
-        document.getElementById("up").addEventListener("click", () => {
-            if (direction.y === 0) nextDirection = { x: 0, y: -gridSize };
-        });
+        document.getElementById("restartBtn").addEventListener("click", restartGame);
 
-        document.getElementById("down").addEventListener("click", () => {
-            if (direction.y === 0) nextDirection = { x: 0, y: gridSize };
-        });
+        // Mobile tap controls
+        canvas.addEventListener("click", (event) => {
+            if (!gameStarted) gameStarted = true;
 
-        document.getElementById("left").addEventListener("click", () => {
-            if (direction.x === 0) nextDirection = { x: -gridSize, y: 0 };
-        });
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
 
-        document.getElementById("right").addEventListener("click", () => {
-            if (direction.x === 0) nextDirection = { x: gridSize, y: 0 };
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            if (y < centerY && direction.y === 0) { // Tap upper side -> Move Up
+                nextDirection = { x: 0, y: -gridSize };
+            }
+            if (y > centerY && direction.y === 0) { // Tap lower side -> Move Down
+                nextDirection = { x: 0, y: gridSize };
+            }
+            if (x < centerX && direction.x === 0) { // Tap left side -> Move Left
+                nextDirection = { x: -gridSize, y: 0 };
+            }
+            if (x > centerX && direction.x === 0) { // Tap right side -> Move Right
+                nextDirection = { x: gridSize, y: 0 };
+            }
         });
 
         setInterval(gameLoop, 100);
